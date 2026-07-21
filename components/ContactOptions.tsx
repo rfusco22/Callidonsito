@@ -2,7 +2,7 @@
 
 import { config } from '@/lib/config';
 
-export function ContactOptions() {
+export function ContactOptions({ userName = '' }: { userName?: string }) {
   return (
     <div className="bg-primary/10 border-t border-primary/30 px-4 py-4">
       <p className="text-light text-sm font-semibold mb-3">Get in touch:</p>
@@ -20,14 +20,12 @@ export function ContactOptions() {
 
         {/* WhatsApp Button */}
         <a
-          href={`https://wa.me/${config.contact.whatsapp.replace(/\D/g, '')}?text=Hola%20${config.chatbotName}`}
+          href={`https://wa.me/${config.contact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'm ${userName || 'a customer'}, I come from Callidonsito, I'm looking for more information`)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 px-3 py-2 bg-primary hover:bg-orange-600 text-light rounded-lg font-semibold text-sm transition"
         >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.945 1.347l-.355.187-.368-.01c-3.24 0-5.974 2.663-5.974 5.95 0 1.294.33 2.55.995 3.665L1.07 23.5l3.898-1.288c1.09.594 2.283.922 3.516.922h.004c3.902 0 7.968-3.018 7.968-6.727 0-1.8-.775-3.489-2.114-4.731a6.716 6.716 0 00-4.77-1.974" />
-          </svg>
+          <img src="/WhatsApp_icon.png" alt="WhatsApp" className="w-4 h-4" />
           WhatsApp
         </a>
 

@@ -318,7 +318,7 @@ export function ChatBot() {
 
                   {messages.length > 1 && !isLoading && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-4">
-                      <ContactOptions />
+                      <ContactOptions userName={leadData?.name || ''} />
                     </motion.div>
                   )}
                 </div>

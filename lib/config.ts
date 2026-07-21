@@ -12,13 +12,13 @@ IMPORTANT RULES:
     model: "openai/gpt-4o-mini",
   },
   contact: {
-    phone: "04122928717",
-    whatsapp: "584122928717",
-    email: "fuscoriccardo11@gmail.com"
+    phone: "17866741345",
+    whatsapp: "17866741345",
+    email: "Info@callidongroup.com"
   },
   owner: {
-    name: "Fusco Riccardo",
-    email: "fuscoriccardo11@gmail.com"
+    name: "Callidon Group",
+    email: "Info@callidongroup.com"
   },
   validation: {
     phone: { minDigits: 10 },
