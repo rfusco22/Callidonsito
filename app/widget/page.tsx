@@ -9,9 +9,6 @@ import { ContactOptions } from '@/components/ContactOptions';
 
 export default function WidgetPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [userInfo, setUserInfo] = useState<{ name: string; phone: string; email: string } | null>(
-    null
-  );
 
   const { messages, sendMessage, input, setInput, isLoading } = useChat({
     transport: new DefaultChatTransport({
@@ -20,7 +17,6 @@ export default function WidgetPage() {
   });
 
   const handleFormSubmit = (formData: { name: string; phone: string; email: string }) => {
-    setUserInfo(formData);
     setFormSubmitted(true);
 
     const initialMessage = `Hola, me llamo ${formData.name}, mi teléfono es ${formData.phone} y mi email es ${formData.email}. Me gustaría encontrar una máquina de equipos pesados.`;
