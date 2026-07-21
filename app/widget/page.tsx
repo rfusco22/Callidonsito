@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChatMessages } from '@/components/ChatMessages';
 import { InitialForm } from '@/components/InitialForm';
 import { ContactOptions } from '@/components/ContactOptions';
