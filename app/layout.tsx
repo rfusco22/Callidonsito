@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   description: 'Encuentra la máquina de equipos pesados perfecta con Callidonsito, tu asistente inteligente',
 };
 
-// Nueva forma de exportar el viewport en Next.js
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

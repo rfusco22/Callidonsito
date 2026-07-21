@@ -15,30 +15,40 @@ export function InitialForm({ onSubmit }: InitialFormProps) {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
+      newErrors.name = 'Name is required';
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido';
+      newErrors.phone = 'Phone is required';
     } else if (!/^\d{10,}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = `El teléfono debe tener al menos ${config.validation.phone.minDigits} dígitos`;
+      newErrors.phone = `Phone must have at least ${config.validation.phone.minDigits} digits`;
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido';
+      newErrors.email = 'Email is required';
     } else if (!config.validation.email.pattern.test(formData.email)) {
-      newErrors.email = 'El email no es válido';
+      newErrors.email = 'Invalid email';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+    
+    // Ejecutamos la función de validación que ya creaste arriba
+    // Si faltan datos o el correo está mal escrito, detiene el envío y muestra los errores rojos
+    if (!validateForm()) {
+      return;
     }
+
+    // Le pasamos los datos exactos que coinciden con tu estado (name, phone, email)
+    onSubmit({
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +85,7 @@ export function InitialForm({ onSubmit }: InitialFormProps) {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Tu nombre completo"
+            placeholder="Your full name"
             className={`w-full px-4 py-2 bg-dark border rounded-lg text-light placeholder-light/40 focus:outline-none transition ${
               errors.name ? 'border-red-500 focus:border-red-500' : 'border-primary/40 focus:border-primary'
             }`}
@@ -113,7 +123,7 @@ export function InitialForm({ onSubmit }: InitialFormProps) {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="tu@email.com"
+            placeholder="you@email.com"
             className={`w-full px-4 py-2 bg-dark border rounded-lg text-light placeholder-light/40 focus:outline-none transition ${
               errors.email ? 'border-red-500 focus:border-red-500' : 'border-primary/40 focus:border-primary'
             }`}
@@ -126,7 +136,7 @@ export function InitialForm({ onSubmit }: InitialFormProps) {
           type="submit"
           className="w-full py-3 bg-primary hover:bg-orange-600 text-light font-bold rounded-lg transition duration-200 mt-6"
         >
-          Comenzar a Buscar
+          Start Searching
         </button>
       </form>
 
