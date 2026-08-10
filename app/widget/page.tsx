@@ -37,7 +37,8 @@ export default function WidgetPage() {
   const checkIfShouldShowContact = () => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role === 'assistant') {
-      const text = lastMessage.parts?.[0]?.text || '';
+      const textParts = lastMessage.parts?.filter((p) => p.type === 'text') || [];
+      const text = textParts.length > 0 ? textParts[0].text : '';
       return (
         text.toLowerCase().includes('contactan') ||
         text.toLowerCase().includes('contacto') ||
