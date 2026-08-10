@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { ChatMessages } from '@/components/ChatMessages';
 import { InitialForm } from '@/components/InitialForm';
 import { ContactOptions } from '@/components/ContactOptions';
-import { config } from '@/lib/config';
 
 export default function WidgetPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
