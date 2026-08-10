@@ -9,8 +9,9 @@ import { ContactOptions } from '@/components/ContactOptions';
 
 export default function WidgetPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [localInput, setLocalInput] = useState('');
 
-  const { messages, sendMessage, input, setInput, isLoading } = useChat({
+  const { messages, sendMessage, isLoading } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat-django',
     }),
@@ -25,9 +26,9 @@ export default function WidgetPage() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim()) {
-      sendMessage({ text: input });
-      setInput('');
+    if (localInput.trim()) {
+      sendMessage({ text: localInput });
+      setLocalInput('');
     }
   };
 
@@ -68,14 +69,14 @@ export default function WidgetPage() {
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <input
                 type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+                value={localInput}
+                onChange={(e) => setLocalInput(e.target.value)}
                 placeholder="Pregunta..."
                 className="flex-1 px-3 py-2 bg-dark border border-primary/40 rounded-lg text-light placeholder-light/40 focus:outline-none focus:border-primary transition text-sm"
               />
               <button
                 type="submit"
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || !localInput.trim()}
                 className="px-4 py-2 bg-primary hover:bg-orange-600 disabled:bg-primary/50 text-light font-semibold rounded-lg transition duration-200 text-sm"
               >
                 {isLoading ? '...' : 'Enviar'}
