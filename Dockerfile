@@ -1,6 +1,6 @@
 FROM node:20-alpine AS base
 
-# Instalar dependencias solo de producción
+# Instalar dependencias de producción
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -11,6 +11,14 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_DJANGO_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_DJANGO_API_URL=$NEXT_PUBLIC_DJANGO_API_URL
+
 RUN npm run build
 
 # Producción
@@ -23,19 +31,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-
-# Copiar archivos necesarios para SQLite
-RUN mkdir -p /app/data
-RUN chown -R nextjs:nodejs /app/data
-
-# Copiar archivos de build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copiar database initialization script
-COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
-COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
+COPY --from=builder /app/public ./public
 
 USER nextjs
 
@@ -43,4 +41,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["./docker-entrypoint.sh"]
+CMD ["node", "server.js"]
