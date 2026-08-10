@@ -1,5 +1,4 @@
 let db: any = null;
-let dbAvailable = false;
 
 function getDb() {
   if (db) return db;
@@ -9,7 +8,6 @@ function getDb() {
   try {
     const sqlite3 = require('sqlite3');
     db = new sqlite3.Database('./callidonsito.db');
-    dbAvailable = true;
     return db;
   } catch {
     return null;
