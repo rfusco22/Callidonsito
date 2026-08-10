@@ -1,6 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,12 +20,14 @@ export function ChatBot() {
   // Inicializamos useChat. 
   // Nota: Si cambiaste a OpenAI en el route.ts, esto funcionará igual.
   const chat = useChat({ 
-    api: '/api/chat',
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
     id: 'callidonsito-v1',
   });
 
   const { messages, status, sendMessage } = chat;
-  const isLoading = chat.isLoading || status === 'streaming' || status === 'submitted';
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   useEffect(() => {
     setMounted(true);
