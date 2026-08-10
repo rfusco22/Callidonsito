@@ -1,5 +1,5 @@
 import { streamText, tool, convertToModelMessages } from 'ai';
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { config } from '@/lib/config';
 
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const systemPrompt = config.systemPrompt;
 
     const result = streamText({
-      model: google('gemini-1.5-flash'),
+      model: openai('gpt-4o-mini'),
       system: systemPrompt,
       messages: await convertToModelMessages(messages),
       tools: {

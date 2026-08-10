@@ -1,4 +1,4 @@
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { streamText, convertToModelMessages } from 'ai';
 
 export const dynamic = 'force-dynamic';
@@ -7,10 +7,10 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    console.log("LOG: Iniciando stream con Gemini...");
+    console.log("LOG: Iniciando stream con OpenAI...");
 
     const result = await streamText({
-      model: google('gemini-1.5-flash'),
+      model: openai('gpt-4o-mini'),
       messages: await convertToModelMessages(messages),
       system: 'Eres Callidonsito, experto en maquinaria pesada de Callidon Equipment Inc.',
     });

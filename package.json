@@ -10,7 +10,7 @@
     "init-db": "node -r tsx scripts/init-db.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^3.0.55",
+    "@ai-sdk/openai": "^3.0.91",
     "@ai-sdk/react": "^3.0.144",
     "ai": "^6.0.142",
     "autoprefixer": "^10.4.14",
