@@ -11,11 +11,13 @@ export default function WidgetPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [localInput, setLocalInput] = useState('');
 
-  const { messages, sendMessage, isLoading } = useChat({
+  const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat-django',
     }),
   });
+
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   const handleFormSubmit = (formData: { name: string; phone: string; email: string }) => {
     setFormSubmitted(true);
