@@ -1,27 +1,39 @@
-import sqlite3 from 'sqlite3';
+let db: any = null;
+let dbAvailable = false;
 
-let db: sqlite3.Database | null = null;
-
-function getDb(): sqlite3.Database {
-  if (!db) {
-    db = new sqlite3.Database('./callidonsito.db');
+function getDb() {
+  if (db) return db;
+  if (process.env.NODE_ENV === 'production') {
+    return null;
   }
-  return db;
+  try {
+    const sqlite3 = require('sqlite3');
+    db = new sqlite3.Database('./callidonsito.db');
+    dbAvailable = true;
+    return db;
+  } catch {
+    return null;
+  }
 }
 
 function dbRun(sql: string, ...params: unknown[]): Promise<void> {
   return new Promise((resolve, reject) => {
-    getDb().run(sql, params, (err) => (err ? reject(err) : resolve()));
+    const connection = getDb();
+    if (!connection) return resolve();
+    connection.run(sql, params, (err: any) => (err ? reject(err) : resolve()));
   });
 }
 
 function dbAll(sql: string, ...params: unknown[]): Promise<any[]> {
   return new Promise((resolve, reject) => {
-    getDb().all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
+    const connection = getDb();
+    if (!connection) return resolve([]);
+    connection.all(sql, params, (err: any, rows: any) => (err ? reject(err) : resolve(rows)));
   });
 }
 
 export async function initializeDatabase() {
+  if (process.env.NODE_ENV === 'production') return "Saltado en producción";
   await dbRun(`
     CREATE TABLE IF NOT EXISTS maquinas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +44,6 @@ export async function initializeDatabase() {
       estado TEXT
     )
   `);
-
   const rows = await dbAll('SELECT count(*) as count FROM maquinas');
   // @ts-ignore
   if (rows[0].count === 0) {
@@ -44,7 +55,6 @@ export async function initializeDatabase() {
       ('Motoniveladora John Deere', 'Motoniveladora', 'Ideal para nivelación de terrenos', 120000, 'En mantenimiento')
     `);
   }
-
   return "Base de datos inicializada con éxito.";
 }
 
