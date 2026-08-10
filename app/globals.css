@@ -1,0 +1,31 @@
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #0f0f10;
+  color: #ECF0F1;
+}
+
+body {
+  /* Cambiamos hidden por auto para permitir scroll si el contenido es largo */
+  overflow-y: auto; 
+  min-height: 100vh;
+  background-color: #0f0f10;
+}
+
+/* Custom Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F39C12;
+}
