@@ -4,8 +4,8 @@ import { promisify } from 'util';
 // Conexión a la base de datos local
 const db = new sqlite3.Database('./callidonsito.db');
 
-const dbRun = promisify(db.run.bind(db));
-const dbAll = promisify(db.all.bind(db));
+const dbRun = promisify(db.run.bind(db)) as (sql: string, ...params: unknown[]) => Promise<void>;
+const dbAll = promisify(db.all.bind(db)) as (sql: string, ...params: unknown[]) => Promise<any[]>;
 
 export async function initializeDatabase() {
   await dbRun(`
