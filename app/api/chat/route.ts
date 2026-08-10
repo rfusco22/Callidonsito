@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     // --- SOLUCIÓN MANUAL (SIN MÉTODOS QUE FALLAN) ---
     // Esto crea un flujo de datos que cualquier versión de useChat entiende
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (error: any) {
     // ESTE LOG ES EL MÁS IMPORTANTE. MIRA TU TERMINAL CUANDO FALLE.
