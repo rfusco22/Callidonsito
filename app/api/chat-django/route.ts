@@ -1,8 +1,7 @@
 import { streamText, tool, convertToModelMessages } from 'ai';
+import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 import { config } from '@/lib/config';
-
-const model = config.ai.model;
 
 // Herramienta para buscar máquinas desde la BD de Django
 const searchMaquinasFromDjango = tool({
@@ -66,15 +65,10 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Verificar que DJANGO_API_URL está configurado
-    if (!process.env.DJANGO_API_URL) {
-      console.warn('[v0] DJANGO_API_URL no configurado, usando BD local');
-    }
-
     const systemPrompt = config.systemPrompt;
 
     const result = streamText({
-      model,
+      model: google('gemini-1.5-flash'),
       system: systemPrompt,
       messages: await convertToModelMessages(messages),
       tools: {
@@ -83,7 +77,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('[v0] Error en chat API Django:', error);
     throw error;
