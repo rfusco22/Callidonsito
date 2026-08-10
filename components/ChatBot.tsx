@@ -17,8 +17,8 @@ export function ChatBot() {
   const [localInput, setLocalInput] = useState('');
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
-  // Inicializamos useChat. 
-  // Nota: Si cambiaste a OpenAI en el route.ts, esto funcionará igual.
+  // Initialize useChat.
+  // Note: If you switched to OpenAI in route.ts, this will work the same.
   const chat = useChat({ 
     transport: new DefaultChatTransport({
       api: '/api/chat',
@@ -52,12 +52,12 @@ export function ChatBot() {
     setTimeout(async () => {
       if (typeof sendMessage === 'function') {
         try {
-          // Usamos el formato de objeto { text } que requiere tu versión de la SDK
+          // We use the { text } object format required by the SDK
           await sendMessage({ 
-            text: `Hola, soy ${formData.name}. Busco asesoría en maquinaria pesada. Contacto: ${formData.email}, ${formData.phone}.` 
+            text: `Hello, I'm ${formData.name}. I'm looking for heavy equipment advice. Contact: ${formData.email}, ${formData.phone}.` 
           });
         } catch (err) {
-          console.error("Error inicial:", err);
+          console.error("Initial error:", err);
         }
       }
     }, 400);
@@ -73,7 +73,7 @@ export function ChatBot() {
         setLocalInput(''); 
         await sendMessage({ text: content }); 
       } catch (err) {
-        console.error("Error en envío:", err);
+        console.error("Send error:", err);
         setLocalInput(content);
       }
     }
@@ -84,7 +84,7 @@ export function ChatBot() {
   return (
     <div className="flex flex-col h-screen bg-[#0f0f10] text-[#ECF0F1] selection:bg-[#F39C12]/30 overflow-hidden">
       
-      {/* HEADER TÉCNICO PREMIUM */}
+      {/* PREMIUM TECH HEADER */}
       <header className="shrink-0 z-50 bg-[#0f0f10]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-4">
@@ -131,10 +131,10 @@ export function ChatBot() {
                   />
                 </div>
 
-                {/* FORMULARIO */}
+                {/* FORM */}
                 <div className="w-full bg-[#161618] p-8 rounded-[2rem] border border-white/5 shadow-2xl relative">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F39C12] text-dark px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
-                    Registro de Asesoría
+                    Consultation Registration
                   </div>
                   <InitialForm onSubmit={handleFormSubmit} />
                 </div>
@@ -150,7 +150,7 @@ export function ChatBot() {
                 <div className="max-w-4xl mx-auto space-y-6">
                   <ChatMessages messages={messages} isLoading={isLoading} />
                   
-                  {/* Solo mostrar contacto cuando la IA ya respondió algo */}
+                  {/* Show contact only after AI has responded */}
                   {messages.length > 1 && !isLoading && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-4">
                       <ContactOptions />
@@ -159,7 +159,7 @@ export function ChatBot() {
                 </div>
               </div>
 
-              {/* INPUT BAR PROFESIONAL */}
+              {/* PROFESSIONAL INPUT BAR */}
               <div className="p-6 bg-gradient-to-t from-[#0f0f10] to-transparent">
                 <form 
                   onSubmit={handleSendMessage} 
@@ -170,7 +170,7 @@ export function ChatBot() {
                     type="text"
                     value={localInput}
                     onChange={(e) => setLocalInput(e.target.value)}
-                    placeholder="¿Buscas una excavadora, retro o rodillo?"
+                    placeholder="Looking for an excavator, backhoe, or loader?"
                     className="flex-1 bg-transparent py-4 text-sm outline-none placeholder:text-slate-600 font-medium"
                     autoComplete="off"
                     disabled={isLoading}

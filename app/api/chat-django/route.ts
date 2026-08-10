@@ -3,13 +3,13 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { config } from '@/lib/config';
 
-// Herramienta para buscar máquinas desde la BD de Django
+// Tool to search machines from Django DB
 const searchMaquinasFromDjango = tool({
   description:
-    'Busca máquinas de equipos pesados en la base de datos Django según las preferencias del cliente',
+    'Search for heavy equipment machines in the Django database based on customer preferences',
   inputSchema: z.object({
-    tipoMaquina: z.string().describe('Tipo de máquina buscada (ej: retroescavadora, excavadora, etc)'),
-    caracteristicas: z.string().describe('Características o especificaciones deseadas'),
+    tipoMaquina: z.string().describe('Type of machine sought (e.g. backhoe, excavator, etc)'),
+    caracteristicas: z.string().describe('Desired features or specifications'),
   }),
   execute: async ({ tipoMaquina, caracteristicas }) => {
     try {
@@ -35,9 +35,9 @@ const searchMaquinasFromDjango = tool({
   },
 });
 
-// Herramienta para obtener todas las máquinas disponibles
+// Tool to get all available machines
 const getAllMaquinasFromDjango = tool({
-  description: 'Obtiene todas las máquinas disponibles en la base de datos Django',
+  description: 'Get all available machines from the Django database',
   inputSchema: z.object({}),
   execute: async () => {
     try {
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
     return result.toTextStreamResponse();
   } catch (error) {
-    console.error('[v0] Error en chat API Django:', error);
+    console.error('[v0] Error in Django chat API:', error);
     throw error;
   }
 }

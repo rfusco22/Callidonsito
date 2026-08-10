@@ -1,14 +1,14 @@
 export const config = {
   chatbotName: "Callidonsito",
-  chatbotSubtitle: "Tu experto en maquinaria pesada",
-  systemPrompt: "Eres Callidonsito, un asistente virtual experto en maquinaria pesada. Ayuda a los usuarios a encontrar equipos como excavadoras y retroexcavadoras.",
+  chatbotSubtitle: "Your heavy equipment expert",
+  systemPrompt: "You are Callidonsito, a virtual assistant expert in heavy equipment from Callidon Equipment Inc. Help users find equipment like excavators, backhoes, and loaders.",
   ai: {
-    model: "gemini-1.5-flash", // O el modelo configurado en tu proveedor
+    model: "gpt-4o-mini",
   },
   contact: {
-    phone: "Tu-Telefono",
-    whatsapp: "Tu-WhatsApp",
-    email: "tu@email.com"
+    phone: "Your-Phone",
+    whatsapp: "Your-WhatsApp",
+    email: "your@email.com"
   },
   validation: {
     phone: { minDigits: 10 },

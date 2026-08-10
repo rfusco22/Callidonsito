@@ -2,11 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Callidonsito - Asistente de Equipos Pesados',
-  description: 'Encuentra la máquina de equipos pesados perfecta con Callidonsito, tu asistente inteligente',
+  title: 'Callidonsito - Heavy Equipment Assistant',
+  description: 'Find the perfect heavy equipment machine with Callidonsito, your intelligent assistant',
 };
 
-// Nueva forma de exportar el viewport en Next.js
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -19,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body className="bg-dark text-light">{children}</body>
     </html>
   );

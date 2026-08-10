@@ -22,7 +22,7 @@ export default function WidgetPage() {
   const handleFormSubmit = (formData: { name: string; phone: string; email: string }) => {
     setFormSubmitted(true);
 
-    const initialMessage = `Hola, me llamo ${formData.name}, mi teléfono es ${formData.phone} y mi email es ${formData.email}. Me gustaría encontrar una máquina de equipos pesados.`;
+    const initialMessage = `Hello, my name is ${formData.name}, my phone is ${formData.phone} and my email is ${formData.email}. I'd like to find heavy equipment.`;
     sendMessage({ text: initialMessage });
   };
 
@@ -40,9 +40,9 @@ export default function WidgetPage() {
       const textParts = lastMessage.parts?.filter((p) => p.type === 'text') || [];
       const text = textParts.length > 0 ? textParts[0].text : '';
       return (
-        text.toLowerCase().includes('contactan') ||
-        text.toLowerCase().includes('contacto') ||
-        text.toLowerCase().includes('llamar') ||
+        text.toLowerCase().includes('contact') ||
+        text.toLowerCase().includes('reach out') ||
+        text.toLowerCase().includes('call') ||
         text.toLowerCase().includes('whatsapp') ||
         text.toLowerCase().includes('email')
       );
@@ -52,7 +52,7 @@ export default function WidgetPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-dark via-dark to-dark overflow-hidden">
-      {/* Versión embebida sin header, optimizada para widget */}
+      {/* Embedded version without header, optimized for widget */}
       {!formSubmitted ? (
         <div className="flex items-center justify-center flex-1 px-4">
           <div className="w-full max-w-sm">
@@ -74,7 +74,7 @@ export default function WidgetPage() {
                 type="text"
                 value={localInput}
                 onChange={(e) => setLocalInput(e.target.value)}
-                placeholder="Pregunta..."
+                placeholder="Ask a question..."
                 className="flex-1 px-3 py-2 bg-dark border border-primary/40 rounded-lg text-light placeholder-light/40 focus:outline-none focus:border-primary transition text-sm"
               />
               <button
@@ -82,7 +82,7 @@ export default function WidgetPage() {
                 disabled={isLoading || !localInput.trim()}
                 className="px-4 py-2 bg-primary hover:bg-orange-600 disabled:bg-primary/50 text-light font-semibold rounded-lg transition duration-200 text-sm"
               >
-                {isLoading ? '...' : 'Enviar'}
+                {isLoading ? '...' : 'Send'}
               </button>
             </form>
           </div>

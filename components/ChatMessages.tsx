@@ -31,7 +31,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
                 return null;
               })
             ) : (
-              <p className="text-sm">Cargando...</p>
+              <p className="text-sm">Loading...</p>
             )}
           </div>
         </div>
