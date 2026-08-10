@@ -1,11 +1,26 @@
 import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 
-// Conexión a la base de datos local
-const db = new sqlite3.Database('./callidonsito.db');
+let db: sqlite3.Database | null = null;
 
-const dbRun = promisify(db.run.bind(db)) as (sql: string, ...params: unknown[]) => Promise<void>;
-const dbAll = promisify(db.all.bind(db)) as (sql: string, ...params: unknown[]) => Promise<any[]>;
+function getDb(): sqlite3.Database {
+  if (!db) {
+    db = new sqlite3.Database('./callidonsito.db');
+  }
+  return db;
+}
+
+function dbRun(sql: string, ...params: unknown[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    getDb().run(sql, params, (err) => (err ? reject(err) : resolve()));
+  });
+}
+
+function dbAll(sql: string, ...params: unknown[]): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    getDb().all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
+  });
+}
 
 export async function initializeDatabase() {
   await dbRun(`
@@ -37,7 +52,7 @@ export async function initializeDatabase() {
 export async function searchMaquinas(query: string) {
   return await dbAll(
     "SELECT * FROM maquinas WHERE nombre LIKE ? OR descripcion LIKE ?",
-    [`%${query}%`, `%${query}%`]
+    `%${query}%`, `%${query}%`
   );
 }
 
