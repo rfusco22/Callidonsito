@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Callidonsito - Heavy Equipment Assistant',
-  description: 'Find the perfect heavy equipment machine with Callidonsito, your intelligent assistant',
+  title: 'Callidon - Heavy Equipment Assistant',
+  description: 'Find the perfect heavy equipment machine with Callidon, your intelligent assistant',
 };
 
 export const viewport: Viewport = {

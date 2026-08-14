@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages: await convertToModelMessages(messages),
-      system: 'You are Callidonsito, a heavy equipment expert from Callidon Equipment Inc.',
+      system: 'You are Callidon, a heavy equipment expert from Callidon Equipment Inc.',
     });
 
     return result.toTextStreamResponse();

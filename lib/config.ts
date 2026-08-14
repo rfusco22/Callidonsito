@@ -1,7 +1,7 @@
 export const config = {
-  chatbotName: "Callidonsito",
+  chatbotName: "Callidon",
   chatbotSubtitle: "Your heavy equipment expert",
-  systemPrompt: "You are Callidonsito, a virtual assistant expert in heavy equipment from Callidon Equipment Inc. Help users find equipment like excavators, backhoes, and loaders.",
+  systemPrompt: "You are Callidon, a virtual assistant expert in heavy equipment from Callidon Equipment Inc. Help users find equipment like excavators, backhoes, and loaders.",
   ai: {
     model: "gpt-4o-mini",
   },
