@@ -2,6 +2,7 @@ import { openai } from '@ai-sdk/openai';
 import { streamText, convertToModelMessages } from 'ai';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
@@ -20,6 +21,10 @@ export async function POST(req: Request) {
       model: openai('gpt-4o-mini'),
       messages: await convertToModelMessages(messages),
       system: 'You are Callidon, a heavy equipment expert from Callidon Equipment Inc.',
+      onError: ({ error }) => {
+        console.error('--- OPENAI STREAM ERROR ---');
+        console.error(error);
+      },
     });
 
     return result.toTextStreamResponse();
@@ -27,9 +32,14 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('--- SERVER ERROR ---');
     console.error('MESSAGE:', error.message);
+    console.error('STACK:', error.stack);
 
-    const message = error?.message?.includes('credits')
-      ? "The AI service has no credits remaining. Please add credits to your OpenAI account."
+    const isCreditsError = error?.message?.includes('credits') ||
+                           error?.message?.includes('quota') ||
+                           error?.statusCode === 429;
+
+    const message = isCreditsError
+      ? "The AI service has no credits remaining. Please add credits to your OpenAI account at https://platform.openai.com/settings/organization/billing/"
       : (error?.message || "Internal error");
 
     return new Response(
