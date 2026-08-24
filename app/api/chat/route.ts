@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const modelName = isOpenRouter ? 'openai/gpt-4o-mini' : 'gpt-4o-mini';
 
     const result = await streamText({
-      model: openai(modelName),
+      model: openai(modelName) as any,
       messages: await convertToModelMessages(messages),
       system: 'You are Callidon, a heavy equipment expert from Callidon Equipment Inc.',
       abortSignal: AbortSignal.timeout(25000),
