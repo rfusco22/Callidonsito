@@ -8,12 +8,9 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    const apiKey = process.env.OPENAI_API_KEY;
     console.log("LOG: Starting stream with OpenAI...");
-    console.log("LOG: API key present:", !!apiKey);
-    console.log("LOG: API key starts with:", apiKey?.substring(0, 7));
 
-    if (!apiKey) {
+    if (!process.env.OPENAI_API_KEY) {
       return new Response(
         JSON.stringify({ error: "OpenAI API key is not configured." }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -24,6 +21,7 @@ export async function POST(req: Request) {
       model: openai('gpt-4o-mini'),
       messages: await convertToModelMessages(messages),
       system: 'You are Callidon, a heavy equipment expert from Callidon Equipment Inc.',
+      abortSignal: AbortSignal.timeout(25000),
       onError: ({ error }) => {
         console.error('--- OPENAI STREAM ERROR ---');
         console.error(JSON.stringify(error, null, 2));
