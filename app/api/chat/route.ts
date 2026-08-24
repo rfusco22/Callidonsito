@@ -9,6 +9,13 @@ export async function POST(req: Request) {
 
     console.log("LOG: Starting stream with OpenAI...");
 
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "OpenAI API key is not configured." }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages: await convertToModelMessages(messages),
@@ -20,9 +27,13 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('--- SERVER ERROR ---');
     console.error('MESSAGE:', error.message);
-    
+
+    const message = error?.message?.includes('credits')
+      ? "The AI service has no credits remaining. Please add credits to your OpenAI account."
+      : (error?.message || "Internal error");
+
     return new Response(
-      JSON.stringify({ error: error.message || "Internal error" }), 
+      JSON.stringify({ error: message }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
