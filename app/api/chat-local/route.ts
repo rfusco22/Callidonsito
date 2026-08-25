@@ -19,6 +19,15 @@ export const TIPOS_MAQUINAS = [
 ];
 
 export function normalizarMaquina(item: any) {
+  const djangoBase = DJANGO_API_URL.replace(/\/$/, '');
+  let foto = item.foto || item.image || item.photo || '';
+  if (foto && !foto.startsWith('http')) {
+    foto = `${djangoBase}${foto.startsWith('/') ? '' : '/'}${foto}`;
+  }
+  let url = item.url || `/maquinas/${item.id}`;
+  if (url && !url.startsWith('http')) {
+    url = `${djangoBase}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
   return {
     id: item.id,
     nombre: item.nombre || item.name || 'Sin nombre',
@@ -26,8 +35,8 @@ export function normalizarMaquina(item: any) {
     descripcion: item.descripcion || item.description || '',
     precio: item.precio || item.price || 0,
     estado: item.estado || item.status || 'Disponible',
-    foto: item.foto || item.image || item.photo || '',
-    url: item.url || `/maquinas/${item.id}`,
+    foto,
+    url,
   };
 }
 
