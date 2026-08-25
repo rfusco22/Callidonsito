@@ -16,6 +16,7 @@ let dbAvailable = false;
 async function getDb(): Promise<any | null> {
   if (dbAvailable) return db;
   try {
+    // @ts-ignore - sqlite3 may not be installed in production
     sqlite3 = (await import('sqlite3')).default;
     const path = await import('path');
     const dbPath = path.join(process.cwd(), 'callidonsito.db');
