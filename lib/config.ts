@@ -5,6 +5,8 @@ export const config = {
   ai: {
     model: "gpt-4o-mini",
   },
+  djangoApiUrl: process.env.NEXT_PUBLIC_DJANGO_API_URL || process.env.DJANGO_API_URL || "",
+  inactivityTimeoutMs: 5 * 60 * 1000,
   contact: {
     phone: "Your-Phone",
     whatsapp: "Your-WhatsApp",
