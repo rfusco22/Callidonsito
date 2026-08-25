@@ -1,5 +1,3 @@
-
-
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
@@ -16,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Convert UIMessages to OpenAI chat format
     const openaiMessages = messages.map((m: any) => {
       const textParts = (m.parts || []).filter((p: any) => p.type === 'text');
       const text = textParts.map((p: any) => p.text).join('\n');
@@ -67,44 +64,59 @@ export async function POST(req: Request) {
 
     const stream = new ReadableStream({
       async start(streamController) {
+        let closed = false;
+        const safeClose = () => {
+          if (!closed) {
+            closed = true;
+            clearTimeout(timeout);
+            try { streamController.close(); } catch {}
+          }
+        };
+        const safeEnqueue = (chunk: Uint8Array) => {
+          if (!closed) {
+            try { streamController.enqueue(chunk); } catch {}
+          }
+        };
+        const safeError = (err: any) => {
+          if (!closed) {
+            closed = true;
+            clearTimeout(timeout);
+            try { streamController.error(err); } catch {}
+          }
+        };
+
         try {
           let buffer = '';
           while (true) {
             const { done, value } = await reader.read();
-            if (done) {
-              streamController.enqueue(encoder.encode('data: [DONE]\n\n'));
-              streamController.close();
-              break;
-            }
+            if (done) break;
+
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
             buffer = lines.pop() || '';
 
             for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6).trim();
-                if (data === '[DONE]') {
-                  streamController.enqueue(encoder.encode('data: [DONE]\n\n'));
-                  streamController.close();
-                  clearTimeout(timeout);
-                  return;
-                }
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    streamController.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
-                  }
-                } catch {
-                  // skip malformed JSON
-                }
+              const trimmed = line.trim();
+              if (!trimmed.startsWith('data:')) continue;
+              const data = trimmed.slice(5).trim();
+              if (data === '[DONE]') {
+                safeClose();
+                return;
               }
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  safeEnqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                }
+              } catch {}
             }
           }
+          safeEnqueue(encoder.encode('data: [DONE]\n\n'));
+          safeClose();
         } catch (err: any) {
           console.error('Stream error:', err.message);
-          streamController.error(err);
-          clearTimeout(timeout);
+          safeError(err);
         }
       },
     });
