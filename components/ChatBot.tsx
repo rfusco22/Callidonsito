@@ -239,6 +239,7 @@ export function ChatBot() {
   return (
     <div className="flex flex-col h-screen bg-[#0f0f10] text-[#ECF0F1] selection:bg-[#F39C12]/30 overflow-hidden">
 
+      {/* HEADER */}
       <header className="shrink-0 z-50 bg-[#0f0f10]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-4">

@@ -1,7 +1,7 @@
 'use client';
 
 import { UIMessage } from 'ai';
-import Image from 'next/image';
+import { MachineCard } from './MachineCard';
 
 interface MachineResult {
   id: number;
@@ -14,6 +14,18 @@ interface MachineResult {
   url: string;
 }
 
+function MachineCardList({ maquinas }: { maquinas: MachineResult[] }) {
+  if (!maquinas || maquinas.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-3 my-2 w-full max-w-xl">
+      {maquinas.map((m) => (
+        <MachineCard key={m.id} {...m} />
+      ))}
+    </div>
+  );
+}
+
 interface ChatMessagesProps {
   messages: UIMessage[];
   isLoading: boolean;
@@ -22,58 +34,73 @@ interface ChatMessagesProps {
 
 export function ChatMessages({ messages, isLoading, maquinasPorMsg = {} }: ChatMessagesProps) {
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((message, index) => (
-        <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-          <div
-            className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
-              message.role === 'user'
-                ? 'bg-primary text-light'
-                : 'bg-dark border border-primary/30 text-light'
-            }`}
-          >
-            {message.parts && message.parts.length > 0 ? (
-              message.parts.map((part, i) => {
-                if (part.type === 'text') {
-                  return (
-                    <p key={i} className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {part.text}
-                    </p>
-                  );
-                }
-                return null;
-              })
-            ) : (
-              <p className="text-sm">Loading...</p>
+    <div className="flex-1 overflow-y-auto space-y-4">
+      {messages.map((message, index) => {
+        if (!message.parts || message.parts.length === 0) {
+          return (
+            <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${message.role === 'user' ? 'bg-primary text-light' : 'bg-dark border border-primary/30 text-light'}`}>
+                <p className="text-sm">Cargando...</p>
+              </div>
+            </div>
+          );
+        }
+
+        const textParts = message.parts.filter((p) => p.type === 'text');
+        const toolParts = message.parts.filter((p) => p.type === 'tool-invocation');
+        const maquinas = maquinasPorMsg[String(index)];
+
+        return (
+          <div key={index} className="space-y-2">
+            {textParts.length > 0 && (
+              <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${message.role === 'user' ? 'bg-primary text-light' : 'bg-dark border border-primary/30 text-light'}`}>
+                  {textParts.map((part, i) => {
+                    const text = (part as any).text || '';
+                    const lines = text.split('\n').filter((l: string) => l.trim());
+                    return lines.map((line: string, j: number) => (
+                      <p key={`${i}-${j}`} className="text-sm leading-relaxed">
+                        {line}
+                      </p>
+                    ));
+                  })}
+                </div>
+              </div>
             )}
 
-            {message.role === 'assistant' && maquinasPorMsg[String(index)] && (
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                {maquinasPorMsg[String(index)].map((m) => (
-                  <a
-                    key={m.id}
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex gap-3 bg-[#1c1c1f] border border-primary/20 rounded-lg overflow-hidden hover:border-primary transition"
-                  >
-                    {m.foto && (
-                      <div className="relative w-20 h-20 shrink-0">
-                        <Image src={m.foto} alt={m.nombre} fill className="object-cover" />
-                      </div>
-                    )}
-                    <div className="flex-1 p-2 min-w-0">
-                      <p className="text-xs font-bold text-[#F39C12] truncate">{m.nombre}</p>
-                      <p className="text-[10px] text-light/70 line-clamp-2">{m.descripcion}</p>
-                      <p className="text-[10px] text-green-400 font-bold mt-1">${m.precio?.toLocaleString()}</p>
-                    </div>
-                  </a>
-                ))}
+            {message.role === 'assistant' &&
+              toolParts.map((part, i) => {
+                const ti = (part as any).toolInvocation;
+                if (
+                  ti &&
+                  ti.state === 'result' &&
+                  ti.result &&
+                  ti.result.maquinas &&
+                  ti.result.maquinas.length > 0
+                ) {
+                  return <MachineCardList key={`tool-${i}`} maquinas={ti.result.maquinas} />;
+                }
+                return null;
+              })}
+
+            {message.role === 'assistant' && maquinas && maquinas.length > 0 && (
+              <div className="flex justify-start">
+                <div className="w-full">
+                  <MachineCardList maquinas={maquinas} />
+                </div>
+              </div>
+            )}
+
+            {message.role === 'assistant' && textParts.length === 0 && toolParts.length === 0 && !maquinas && (
+              <div className="flex justify-start">
+                <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-lg bg-dark border border-primary/30 text-light">
+                  <p className="text-sm leading-relaxed">Cargando...</p>
+                </div>
               </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {isLoading && (
         <div className="flex justify-start">

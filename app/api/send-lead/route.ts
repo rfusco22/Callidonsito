@@ -1,70 +1,78 @@
 import nodemailer from 'nodemailer';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: Request) {
   try {
     const { fullName, phone, mail, conversation } = await req.json();
 
     if (!fullName || !phone || !mail) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return Response.json(
+        { error: 'Faltan datos requeridos' },
+        { status: 400 }
+      );
     }
 
-    const ownerEmail = process.env.OWNER_EMAIL || process.env.NEXT_PUBLIC_OWNER_EMAIL;
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"></head>
+      <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="background: #F39C12; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">Nuevo Lead - Callidonsito</h1>
+          </div>
+          <div style="padding: 20px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #333;">Nombre</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; color: #555;">${fullName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #333;">Teléfono</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; color: #555;">${phone}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #333;">Email</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; color: #555;">${mail}</td>
+              </tr>
+            </table>
 
-    if (!ownerEmail) {
-      return new Response(JSON.stringify({ error: 'OWNER_EMAIL not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+            <h2 style="color: #333; font-size: 16px; margin-top: 20px;">Conversación</h2>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; white-space: pre-wrap; font-size: 13px; color: #555; line-height: 1.6;">
+              ${(conversation || 'Sin conversación').replace(/\n/g, '<br>')}
+            </div>
 
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      return new Response(JSON.stringify({ error: 'SMTP not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+            <p style="color: #999; font-size: 12px; margin-top: 20px; text-align: center;">
+              Este lead fue generado automáticamente por Callidonsito tras 30 minutos de inactividad.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
 
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
-        user: process.env.SMTP_USER,
+        user: process.env.SMTP_USER || 'fuscoriccardo11@gmail.com',
         pass: process.env.SMTP_PASS,
       },
     });
 
-    const mailBody = `
-New lead from Callidon chatbot:
-
-Name: ${fullName}
-Phone: ${phone}
-Email: ${mail}
-
---- Conversation ---
-${conversation || '(no conversation recorded)'}
-    `.trim();
-
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: ownerEmail,
-      subject: `New lead: ${fullName}`,
-      text: mailBody,
+      from: `"Callidonsito" <${process.env.SMTP_USER || 'noreply@callidonsito.com'}>`,
+      to: process.env.OWNER_EMAIL || 'fuscoriccardo11@gmail.com',
+      subject: `Nuevo Lead - ${fullName} - Callidonsito`,
+      html: htmlContent,
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error: any) {
-    console.error('Send lead error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Internal error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return Response.json({ success: true, message: 'Lead enviado por correo exitosamente' });
+  } catch (error) {
+    console.error('[v0] Error sending lead email:', error);
+    return Response.json(
+      { error: 'Error al enviar el correo' },
+      { status: 500 }
+    );
   }
 }

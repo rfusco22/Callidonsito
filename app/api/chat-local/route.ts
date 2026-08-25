@@ -1,205 +1,156 @@
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import { streamText, convertToModelMessages } from 'ai';
+import { config } from '@/lib/config';
+
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
 
-const SYSTEM_PROMPT = `You are Callidon, a virtual assistant expert in heavy equipment from Callidon Equipment Inc. Help users find equipment like excavators, backhoes, loaders, bulldozers, motor graders, rollers, and trucks. Be helpful, professional, and concise. Respond in the same language the user writes in.`;
+const DJANGO_API_URL = process.env.DJANGO_API_URL || '';
 
-// GET handler: search machines from Django API
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const q = url.searchParams.get('q');
+export const TIPOS_MAQUINAS = [
+  'excavadora', 'excavator',
+  'retroexcavadora', 'retroexcavator', 'backhoe',
+  'bulldozer',
+  'motoniveladora', 'motor grader', 'grader',
+  'rodillo', 'roller', 'compactor',
+  'cargador', 'loader', 'front loader',
+  'mini cargador', 'mini loader', 'skid steer',
+  'camión', 'camion articulado', 'truck', 'dump truck', 'articulated truck',
+  'inventario', 'maquinaria', 'máquina', 'inventory', 'machinery', 'machine'
+];
 
-  if (!q) {
-    return Response.json({ maquinas: [] });
-  }
+export function normalizarMaquina(item: any) {
+  return {
+    id: item.id,
+    nombre: item.nombre || item.name || 'Sin nombre',
+    tipo: item.tipo || item.type || 'General',
+    descripcion: item.descripcion || item.description || '',
+    precio: item.precio || item.price || 0,
+    estado: item.estado || item.status || 'Disponible',
+    foto: item.foto || item.image || item.photo || '',
+    url: item.url || `/maquinas/${item.id}`,
+  };
+}
 
-  const djangoUrl = process.env.DJANGO_API_URL || process.env.NEXT_PUBLIC_DJANGO_API_URL;
-  if (!djangoUrl) {
-    return Response.json({ maquinas: [] });
-  }
+async function buscarEnDjango(consulta: string) {
+  if (!DJANGO_API_URL) throw new Error('DJANGO_API_URL no configurado');
+  const response = await fetch(`${DJANGO_API_URL.replace(/\/$/, '')}/api/items/search/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: consulta === '*' ? '' : consulta }),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error(`Django ${response.status}`);
+  const data = await response.json();
+  return data.results || data || [];
+}
 
+async function buscarEnSqlite(consulta: string) {
+  const { searchMaquinasByQuery } = await import('@/lib/database');
+  return await searchMaquinasByQuery(consulta);
+}
+
+export async function buscarMaquinas(consulta: string) {
+  let maquinas: any[] = [];
+  let djangoRespondio = false;
   try {
-    const response = await fetch(`${djangoUrl}/api/items/search/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q }),
-    });
+    maquinas = await buscarEnDjango(consulta);
+    djangoRespondio = true;
+  } catch (err) {
+    console.warn('[v0] Django no disponible:', (err as Error).message);
+  }
+  if (!djangoRespondio && maquinas.length === 0) {
+    try {
+      maquinas = await buscarEnSqlite(consulta);
+    } catch {}
+  }
+  return maquinas.map(normalizarMaquina);
+}
 
-    if (!response.ok) {
-      return Response.json({ maquinas: [] });
+const TIPOS_GENERICOS = [
+  'inventario', 'maquinaria', 'máquina', 'tienes', 'catalogo', 'catálogo', 'lista',
+  'inventory', 'machinery', 'catalog', 'catalogue', 'list', 'have', 'available',
+];
+
+function detectarConsulta(messages: any[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role !== 'user') continue;
+    const texto = (msg.parts || [])
+      .filter((p: any) => p.type === 'text')
+      .map((p: any) => p.text)
+      .join(' ')
+      .toLowerCase();
+    for (const tipo of TIPOS_MAQUINAS) {
+      if (texto.includes(tipo)) return tipo;
+    }
+    for (const gen of TIPOS_GENERICOS) {
+      if (texto.includes(gen)) return '*';
+    }
+  }
+  return null;
+}
+
+function construirContextoMaquinas(maquinas: any[], consulta: string): string {
+  const lista = maquinas.map((m, i) =>
+    `${i + 1}. **${m.nombre}** (${m.tipo}) - ${m.estado} - $${m.precio?.toLocaleString() || 'Consult'}\n   ${m.descripcion}`
+  ).join('\n');
+  return `\n\nCURRENT INVENTORY - Results for "${consulta}":\n${lista}\n\nPresent these results to the customer in a friendly way. Mention the names, prices and suggest viewing more details.`;
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { messages } = body;
+
+    let systemPrompt = config.systemPrompt;
+
+    const hasMachineData = systemPrompt.includes('CURRENT INVENTORY');
+
+    if (!hasMachineData) {
+      try {
+        const todos = await buscarEnDjango('');
+        const tipos = [...new Set(todos.map((m: any) => m.tipo).filter(Boolean))];
+        if (tipos.length > 0) {
+          systemPrompt += `\n\nAVAILABLE CATEGORIES: ${tipos.join(', ')}.\nWhen a customer introduces themselves, greet them and let them know the available categories.`;
+        }
+      } catch {}
     }
 
-    const data = await response.json();
-    const maquinas = (data.results || data || []).map((m: any) => ({
-      id: m.id,
-      nombre: m.nombre || m.name,
-      tipo: m.tipo || m.type,
-      descripcion: m.descripcion || m.description,
-      precio: m.precio || m.price,
-      estado: m.estado || m.status,
-      foto: m.foto || m.image || m.photo,
-      url: m.url || `${djangoUrl}/items/${m.id}`,
-    }));
+    let maquinasEncontradas: any[] = [];
+    let consulta = '';
 
-    return Response.json({ maquinas });
-  } catch (err: any) {
-    console.error('Error searching machines:', err.message);
-    return Response.json({ maquinas: [] });
+    const detected = detectarConsulta(messages);
+    if (detected) {
+      consulta = detected;
+      maquinasEncontradas = await buscarMaquinas(consulta);
+      if (maquinasEncontradas.length > 0) {
+        systemPrompt += construirContextoMaquinas(maquinasEncontradas, consulta === '*' ? 'all inventory' : consulta);
+      } else {
+        systemPrompt += `\n\nINVENTORY - No results found for "${consulta}". Inform the customer that there is currently no stock.`;
+      }
+    }
+
+    const openrouter = createOpenRouter({
+      apiKey: (process.env.OPENROUTER_API_KEY || '').trim(),
+    });
+
+    const result = streamText({
+      model: openrouter(config.ai.model),
+      system: systemPrompt,
+      messages: await convertToModelMessages(messages),
+    });
+
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error('[v0] Error en chat-local API:', error);
+    return Response.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
-// POST handler: chat with OpenAI
-export async function POST(req: Request) {
-  try {
-    const { messages } = await req.json();
-
-    console.log("LOG: Starting stream with OpenAI...");
-
-    if (!process.env.OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "OpenAI API key is not configured." }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const openaiMessages = messages.map((m: any) => {
-      const textParts = (m.parts || []).filter((p: any) => p.type === 'text');
-      const text = textParts.map((p: any) => p.text).join('\n');
-      return { role: m.role, content: text };
-    });
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
-
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...openaiMessages,
-        ],
-        stream: true,
-      }),
-    });
-
-    if (!openaiRes.ok) {
-      clearTimeout(timeout);
-      const errText = await openaiRes.text();
-      console.error('OpenAI API error:', errText);
-      const isCreditsError = errText.includes('credits') || errText.includes('quota');
-      const message = isCreditsError
-        ? 'The AI service has no credits remaining. Please add credits to your OpenAI account.'
-        : `OpenAI API error: ${openaiRes.status}`;
-      return new Response(JSON.stringify({ error: message }), {
-        status: openaiRes.status,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const reader = openaiRes.body?.getReader();
-    if (!reader) {
-      clearTimeout(timeout);
-      return new Response(JSON.stringify({ error: 'No response stream' }), { status: 500 });
-    }
-
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-
-    const stream = new ReadableStream({
-      async start(streamController) {
-        let closed = false;
-        const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-        const safeClose = () => {
-          if (!closed) {
-            closed = true;
-            clearTimeout(timeout);
-            try { streamController.close(); } catch {}
-          }
-        };
-        const safeEnqueue = (chunk: Uint8Array) => {
-          if (!closed) {
-            try { streamController.enqueue(chunk); } catch {}
-          }
-        };
-        const safeError = (err: any) => {
-          if (!closed) {
-            closed = true;
-            clearTimeout(timeout);
-            try { streamController.error(err); } catch {}
-          }
-        };
-
-        try {
-          safeEnqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'text-start', id: messageId })}\n\n`)
-          );
-
-          let buf = '';
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buf += decoder.decode(value, { stream: true });
-            const lines = buf.split('\n');
-            buf = lines.pop() || '';
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed.startsWith('data:')) continue;
-              const data = trimmed.slice(5).trim();
-              if (data === '[DONE]') continue;
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  safeEnqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({ type: 'text-delta', id: messageId, delta: content })}\n\n`
-                    )
-                  );
-                }
-              } catch {}
-            }
-          }
-
-          safeEnqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'text-end', id: messageId })}\n\n`)
-          );
-          safeEnqueue(encoder.encode('data: [DONE]\n\n'));
-          safeClose();
-        } catch (err: any) {
-          console.error('Stream error:', err.message);
-          safeError(err);
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
-
-  } catch (error: any) {
-    console.error('--- SERVER ERROR ---');
-    console.error('MESSAGE:', error.message);
-
-    const isCreditsError = error?.message?.includes('credits') || error?.message?.includes('quota');
-    const message = isCreditsError
-      ? 'The AI service has no credits remaining. Please add credits to your OpenAI account.'
-      : (error?.message || 'Internal error');
-
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const q = url.searchParams.get('q');
+  if (!q) return Response.json({ maquinas: [] });
+  const maquinas = await buscarMaquinas(q);
+  return Response.json({ maquinas });
 }

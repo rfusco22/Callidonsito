@@ -1,19 +1,30 @@
 export const config = {
   chatbotName: "Callidon",
-  chatbotSubtitle: "Your heavy equipment expert",
-  systemPrompt: "You are Callidon, a virtual assistant expert in heavy equipment from Callidon Equipment Inc. Help users find equipment like excavators, backhoes, and loaders.",
+  chatbotSubtitle: "Your heavy machinery expert",
+  systemPrompt: `You are Callidonsito, a virtual assistant specialized in heavy machinery for Callidon Equipment Inc.
+
+IMPORTANT RULES:
+1. When a client introduces themselves with their name, greet them warmly in English and ask what type of machinery they need.
+2. When the client asks about a specific machine type (e.g., "I'm looking for an excavator"), PRESENT the inventory results you will see below in a friendly way. Mention the names, prices and suggest viewing more details.
+3. Always be kind, professional, and respond in English.
+4. If the client does not specify a machine type, ask them what kind of work they need to do to recommend the right equipment.`,
   ai: {
-    model: "gpt-4o-mini",
+    model: "openai/gpt-4o-mini",
   },
-  djangoApiUrl: process.env.NEXT_PUBLIC_DJANGO_API_URL || process.env.DJANGO_API_URL || "",
-  inactivityTimeoutMs: 5 * 60 * 1000,
   contact: {
-    phone: "Your-Phone",
-    whatsapp: "Your-WhatsApp",
-    email: "your@email.com"
+    phone: "17866741345",
+    whatsapp: "17866741345",
+    email: "Info@callidongroup.com"
+  },
+  owner: {
+    name: "Callidon Group",
+    email: "Info@callidongroup.com"
   },
   validation: {
     phone: { minDigits: 10 },
     email: { pattern: /^\S+@\S+\.\S+$/ }
-  }
+  },
+  inactivityTimeoutMs: 1800000,
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://callidonsito.com',
+  djangoApiUrl: process.env.DJANGO_API_URL || 'http://127.0.0.1:8000'
 };
