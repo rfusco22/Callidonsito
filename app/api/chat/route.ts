@@ -1,5 +1,4 @@
-import { openai } from '@ai-sdk/openai';
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText } from 'ai';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
