@@ -14,6 +14,17 @@ interface MachineCardProps {
   url: string;
 }
 
+function translateEstado(estado: string): string {
+  const map: Record<string, string> = {
+    'Disponible': 'Available',
+    'En mantenimiento': 'Under maintenance',
+    'Reservado': 'Reserved',
+    'Vendido': 'Sold',
+    'No disponible': 'Unavailable',
+  };
+  return map[estado] || estado;
+}
+
 function MachineImage({ foto, nombre }: { foto: string; nombre: string }) {
   const [error, setError] = useState(false);
   const baseUrl = config.baseUrl;
@@ -39,7 +50,8 @@ function MachineImage({ foto, nombre }: { foto: string; nombre: string }) {
 
 export function MachineCard({ nombre, tipo, descripcion, precio, estado, foto, url }: MachineCardProps) {
   const baseUrl = config.baseUrl;
-  const isDisponible = estado === 'Disponible';
+  const estadoEn = translateEstado(estado);
+  const isDisponible = estadoEn === 'Available';
   const machineUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
   return (
@@ -57,7 +69,7 @@ export function MachineCard({ nombre, tipo, descripcion, precio, estado, foto, u
               ? 'text-green-500 bg-green-500/10'
               : 'text-yellow-500 bg-yellow-500/10'
           }`}>
-            {estado}
+            {estadoEn}
           </span>
         </div>
         <h3 className="text-sm font-black text-white leading-tight">{nombre}</h3>
