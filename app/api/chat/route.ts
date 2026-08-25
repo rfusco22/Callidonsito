@@ -20,7 +20,10 @@ export async function POST(req: Request) {
       return { role: m.role, content: text };
     });
 
-    const systemMessage = { role: 'system', content: 'You are Callidon, a heavy equipment expert from Callidon Equipment Inc.' };
+    const systemMessage = {
+      role: 'system',
+      content: 'You are Callidon, a heavy equipment expert from Callidon Equipment Inc.',
+    };
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
@@ -65,6 +68,8 @@ export async function POST(req: Request) {
     const stream = new ReadableStream({
       async start(streamController) {
         let closed = false;
+        const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
         const safeClose = () => {
           if (!closed) {
             closed = true;
@@ -86,6 +91,10 @@ export async function POST(req: Request) {
         };
 
         try {
+          safeEnqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'text-start', id: messageId })}\n\n`)
+          );
+
           let buffer = '';
           while (true) {
             const { done, value } = await reader.read();
@@ -99,19 +108,24 @@ export async function POST(req: Request) {
               const trimmed = line.trim();
               if (!trimmed.startsWith('data:')) continue;
               const data = trimmed.slice(5).trim();
-              if (data === '[DONE]') {
-                safeClose();
-                return;
-              }
+              if (data === '[DONE]') continue;
               try {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
-                  safeEnqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                  safeEnqueue(
+                    encoder.encode(
+                      `data: ${JSON.stringify({ type: 'text-delta', id: messageId, delta: content })}\n\n`
+                    )
+                  );
                 }
               } catch {}
             }
           }
+
+          safeEnqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'text-end', id: messageId })}\n\n`)
+          );
           safeEnqueue(encoder.encode('data: [DONE]\n\n'));
           safeClose();
         } catch (err: any) {
